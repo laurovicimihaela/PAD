@@ -64,9 +64,7 @@ void recv_msg_handler() {
 		printf("%s", message);
 		str_overwrite_stdout();
 		} else if (receive == 0) {
-				break;
-		} else {
-				printf("ERROR: -1\n");
+			break;
 		}
 		memset(message, 0, sizeof(message));
 	}
@@ -81,14 +79,7 @@ int main(int argc, char **argv){
 	char *ip = "127.0.0.1";
 	int port = atoi(argv[1]);
 
-	struct sigaction sigSIGINT;
-    sigSIGINT.sa_handler=&catch_ctrl_c_and_exit;
-    sigSIGINT.sa_flags=0;
-    if(sigaction(SIGPIPE,&sigSIGINT,NULL)<0)
-    {
-        perror("Error SIGPIPE\n");
-        exit(-1);
-    }
+	signal(SIGINT, catch_ctrl_c_and_exit);
 
 	printf("Please enter your name: ");
   	fgets(name, 32, stdin);
