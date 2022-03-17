@@ -124,8 +124,8 @@ void *handle_client(void *arg){
 		int receive = recv(cli->sockfd, buff_out, BUFFER_SZ, 0);
 		if (receive > 0){
 			if(strlen(buff_out) > 0){
-				trim_endl_char(buff_out, strlen(buff_out));
 				send_message(buff_out, cli->client_id);
+				trim_endl_char(buff_out, strlen(buff_out));
 				printf("%s\n", buff_out);
 			}
 		} else if (receive == 0 || strcmp(buff_out, "exit") == 0){
