@@ -157,75 +157,84 @@ int main(int argc, char **argv){
 		return EXIT_FAILURE;
 	}
 
-	char *ip = "127.0.0.1";
-	int port = atoi(argv[1]);
-	int option = 1;
-	int server_fd = 0, connfd = 0;
+	char c[100];
+	printf("Choose server type c/f: ");
+	scanf("%s",c);
+	if(strcmp("c", c) == 0) {
 
-  	struct sockaddr_in serv_addr;
-  	struct sockaddr_in cli_addr;
-  	pthread_t tid;
+		char *ip = "127.0.0.1";
+		int port = atoi(argv[1]);
+		int option = 1;
+		int server_fd = 0, connfd = 0;
 
- 	/* Socket settings */
-  	server_fd = socket(AF_INET, SOCK_STREAM, 0);
-  	serv_addr.sin_family = AF_INET;
-  	serv_addr.sin_addr.s_addr = inet_addr(ip);
-  	serv_addr.sin_port = htons(port);
+		struct sockaddr_in serv_addr;
+		struct sockaddr_in cli_addr;
+		pthread_t tid;
 
-	struct sigaction sigSIGPIPE;
-    sigSIGPIPE.sa_handler=SIG_IGN;
-    sigSIGPIPE.sa_flags=0;
-    if(sigaction(SIGPIPE,&sigSIGPIPE,NULL)<0)
-    {
-        perror("Error SIGPIPE\n");
-        exit(-1);
-    }
+		/* Socket settings */
+		server_fd = socket(AF_INET, SOCK_STREAM, 0);
+		serv_addr.sin_family = AF_INET;
+		serv_addr.sin_addr.s_addr = inet_addr(ip);
+		serv_addr.sin_port = htons(port);
 
-	if(setsockopt(server_fd, SOL_SOCKET,(SO_REUSEPORT | SO_REUSEADDR),(char*)&option,sizeof(option)) < 0){
-		perror("ERROR: setsockopt failed");
-    	return EXIT_FAILURE;
-	}
-
-  	if(bind(server_fd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
-		perror("ERROR: Socket binding failed");
-		return EXIT_FAILURE;
-  	}
-
-  	if (listen(server_fd, 5) < 0) {
-		perror("ERROR: Socket listening failed");
-		return EXIT_FAILURE;
-	}
-
-	printf("-------Server Started-------\n");
-
-	while(1){
-		socklen_t cli_len = sizeof(cli_addr);
-		connfd = accept(server_fd, (struct sockaddr*)&cli_addr, &cli_len);
-
-		//Check the number of clients
-		if((cli_count + 1) == MAX_CLIENTS){
-			printf("Max clients reached. Rejected: ");
-			print_IPv4_adrr(cli_addr);
-			printf(":%d\n", cli_addr.sin_port);
-			close(connfd);
-			continue;
+		struct sigaction sigSIGPIPE;
+		sigSIGPIPE.sa_handler=SIG_IGN;
+		sigSIGPIPE.sa_flags=0;
+		if(sigaction(SIGPIPE,&sigSIGPIPE,NULL)<0)
+		{
+			perror("Error SIGPIPE\n");
+			exit(-1);
 		}
 
-		//Initialize the client with number cli_count
-		client_struct *cli = (client_struct *)malloc(sizeof(client_struct));
-		cli->address = cli_addr;
-		cli->sockfd = connfd;
-		cli->client_id = client_id++;
+		if(setsockopt(server_fd, SOL_SOCKET,(SO_REUSEPORT | SO_REUSEADDR),(char*)&option,sizeof(option)) < 0){
+			perror("ERROR: setsockopt failed");
+			return EXIT_FAILURE;
+		}
 
-		//Add client to clients list
-		add_client(cli);
-		
-		//Create a thread for every client
-		pthread_create(&tid, NULL, &handle_client, (void*)cli);
+		if(bind(server_fd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
+			perror("ERROR: Socket binding failed");
+			return EXIT_FAILURE;
+		}
 
-		//Reduce CPU usage
-		sleep(1);
+		if (listen(server_fd, 5) < 0) {
+			perror("ERROR: Socket listening failed");
+			return EXIT_FAILURE;
+		}
+
+		printf("-------Server Started-------\n");
+
+		while(1){
+			socklen_t cli_len = sizeof(cli_addr);
+			connfd = accept(server_fd, (struct sockaddr*)&cli_addr, &cli_len);
+
+			//Check the number of clients
+			if((cli_count + 1) == MAX_CLIENTS){
+				printf("Max clients reached. Rejected: ");
+				print_IPv4_adrr(cli_addr);
+				printf(":%d\n", cli_addr.sin_port);
+				close(connfd);
+				continue;
+			}
+
+			//Initialize the client with number cli_count
+			client_struct *cli = (client_struct *)malloc(sizeof(client_struct));
+			cli->address = cli_addr;
+			cli->sockfd = connfd;
+			cli->client_id = client_id++;
+
+			//Add client to clients list
+			add_client(cli);
+			
+			//Create a thread for every client
+			pthread_create(&tid, NULL, &handle_client, (void*)cli);
+
+			//Reduce CPU usage
+			sleep(1);
+		}
+	} else if (strcmp("f", c) == 0) {
+	 	printf("File transfer is not implemented yet\n");
+	} else {
+	 	printf("Option not available, use c(client) or f(file transfer)\n");
 	}
-
 	return 0;
 }
